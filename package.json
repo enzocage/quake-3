@@ -1,0 +1,22 @@
+{
+  "name": "quake3-webgl2-arena",
+  "version": "1.32.0",
+  "private": true,
+  "type": "module",
+  "description": "100% Quake III Arena (1999) HTML5 / WebGL2 Engine with .PK3 VFS, .BSP v46, .MD3 v15 Tag-Rigging, Multipass Shaders, 125Hz Pmove Physics, QVM & OpenArena/nk-oa-assets",
+  "scripts": {
+    "assets:build": "node scripts/build-starter-pk3.mjs",
+    "assets:fetch-oa": "node scripts/fetch-oa-assets.mjs",
+    "dev": "node scripts/build-starter-pk3.mjs && vite --host",
+    "build": "node scripts/build-starter-pk3.mjs && tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}

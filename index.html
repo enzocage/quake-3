@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>QUAKE III ARENA — HTML5 / WebGL2 id Tech 3 Engine</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      color: #eee;
+      font-family: 'Courier New', Courier, monospace;
+      overflow: hidden;
+    }
+    #app-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+    }
+    canvas#gl-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+    canvas#ui-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 2;
+      pointer-events: none;
+    }
+    /* Dropzone Overlay for .PK3 / .BSP / .MD3 files */
+    #pk3-drop-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      background: rgba(15, 0, 0, 0.88);
+      border: 4px dashed #ff3b00;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+    #pk3-drop-overlay.active {
+      display: flex;
+    }
+    #pk3-drop-overlay h2 {
+      font-size: 34px;
+      color: #ff4500;
+      text-shadow: 0 0 20px #ff2200;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+    }
+    #pk3-drop-overlay p {
+      font-size: 16px;
+      color: #ffccaa;
+    }
+    /* Quick Toolbar for PK3 upload, Map switch, Asset Status */
+    #q3-top-bar {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: rgba(12, 8, 8, 0.82);
+      border: 1px solid rgba(255, 68, 0, 0.45);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+    }
+    .q3-btn {
+      background: linear-gradient(180deg, #5a1205 0%, #2a0600 100%);
+      color: #ffcc88;
+      border: 1px solid #ff4500;
+      padding: 4px 9px;
+      font-family: inherit;
+      font-weight: bold;
+      font-size: 11px;
+      cursor: pointer;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      transition: all 0.15s;
+    }
+    .q3-btn:hover {
+      background: linear-gradient(180deg, #991f08 0%, #520d00 100%);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(255, 69, 0, 0.6);
+    }
+    .q3-select {
+      background: #1a0805;
+      color: #ffcc88;
+      border: 1px solid #aa2e00;
+      padding: 3px 6px;
+      font-family: inherit;
+      font-size: 11px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    #vfs-status-badge {
+      color: #88ff88;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    <canvas id="gl-canvas"></canvas>
+    <canvas id="ui-canvas"></canvas>
+
+    <div id="q3-top-bar">
+      <span id="vfs-status-badge">VFS: Booting...</span>
+      <select id="map-selector" class="q3-select" title="Map wechseln (/map)">
+        <option value="q3dm17">q3dm17 — The Longest Yard (Original 1999)</option>
+        <option value="q3dm7">q3dm7 — Temple of Retribution (Original 1999)</option>
+        <option value="q3dm1">q3dm1 — Arena Gate (Original 1999)</option>
+        <option value="q3tourney2">q3tourney2 — The Proving Grounds (Original 1999)</option>
+        <option value="q3dm6">q3dm6 — The Campgrounds</option>
+      </select>
+      <button id="btn-add-bot" class="q3-btn" title="Bot hinzufügen (/addbot)">+ Bot</button>
+      <button id="btn-load-pk3" class="q3-btn" title="Original pak0.pk3 / OpenArena .pk3 oder .bsp/.md3 laden">📂 .PK3 / Assets Laden</button>
+      <button id="btn-fetch-oa" class="q3-btn" title="NeonKnightOA/nk-oa-assets live aus GitHub laden">⬇ NK-OA Assets</button>
+      <button id="btn-toggle-console" class="q3-btn" title="Konsole umschalten (~)">~ Console</button>
+      <input type="file" id="pk3-file-input" multiple accept=".pk3,.zip,.bsp,.md3,.shader,.wav,.roq" style="display:none" />
+    </div>
+
+    <div id="pk3-drop-overlay">
+      <h2>DROP .PK3 / .BSP / .MD3 FILES HERE</h2>
+      <p>Unterstützt: Quake III Arena (pak0..pak8.pk3), OpenArena, NeonKnightOA/nk-oa-assets, Custom Maps (.pk3 / .bsp)</p>
+    </div>
+  </div>
+  <script>
+    if (window.location.protocol === 'file:') {
+      const s = document.createElement('script');
+      s.src = './dist/q3-standalone.js';
+      document.body.appendChild(s);
+    } else {
+      const s = document.createElement('script');
+      s.type = 'module';
+      s.src = '/src/main.ts';
+      document.body.appendChild(s);
+    }
+  </script>
+</body>
+</html>
